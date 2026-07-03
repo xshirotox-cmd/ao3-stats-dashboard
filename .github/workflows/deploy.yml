@@ -36,6 +36,19 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: '_site'
+      # The Pages deploy backend intermittently returns "Deployment failed, try
+      # again later." Retry in-workflow (reusing the one uploaded artifact) so a
+      # transient blip self-heals instead of failing the run. Do NOT re-run the
+      # whole job to fix a failure — that re-uploads the artifact and trips the
+      # "Multiple artifacts named github-pages" error.
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - name: Wait before retry
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 30
+      - name: Deploy to GitHub Pages (retry)
+        id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
