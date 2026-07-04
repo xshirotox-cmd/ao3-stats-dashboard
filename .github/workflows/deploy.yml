@@ -47,8 +47,18 @@ jobs:
         uses: actions/deploy-pages@v4
       - name: Wait before retry
         if: steps.deployment.outcome == 'failure'
-        run: sleep 30
+        run: sleep 45
       - name: Deploy to GitHub Pages (retry)
         id: deployment_retry
         if: steps.deployment.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      # Second retry with a longer backoff — observed backend bursts can outlast
+      # the first window (two "try again later" failures 36s apart on 2026-07-04).
+      - name: Wait before second retry
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        run: sleep 120
+      - name: Deploy to GitHub Pages (second retry)
+        id: deployment_retry2
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
         uses: actions/deploy-pages@v4
