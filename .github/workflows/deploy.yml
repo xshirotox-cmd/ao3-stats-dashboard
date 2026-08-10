@@ -10,10 +10,11 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment; don't cancel an in-progress run.
+# Publish only the newest hourly dashboard. If GitHub leaves a deployment
+# waiting or stuck, the next push replaces it instead of blocking the queue.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
